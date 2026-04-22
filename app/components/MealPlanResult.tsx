@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import type { MealPlanResponse, Meal, Ingredient, ShoppingTrip } from "@/app/api/meal-plan/route";
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -82,6 +83,76 @@ function MealCard({ meal, label, color }: MealCardProps) {
 interface MealPlanResultProps {
   data: MealPlanResponse;
   onReset: () => void;
+}
+
+function ExportMenu({ data }: { data: MealPlanResponse }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handlePrint() {
+    setOpen(false);
+    setTimeout(() => window.print(), 50);
+  }
+
+  function handleDownloadJSON() {
+    setOpen(false);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "meal-plan.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div ref={ref} className="relative no-print">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 rounded-lg border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4">
+          <path fillRule="evenodd" d="M3 17a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm3.293-7.707a1 1 0 0 1 1.414 0L9 10.586V3a1 1 0 1 1 2 0v7.586l1.293-1.293a1 1 0 1 1 1.414 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3a1 1 0 0 1 0-1.414Z" clipRule="evenodd" />
+        </svg>
+        Export
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`size-4 transition-transform ${open ? "rotate-180" : ""}`}>
+          <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-1 w-52 rounded-xl border border-gray-200 bg-white shadow-lg z-20 overflow-hidden">
+          <button
+            onClick={handlePrint}
+            className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 text-gray-500">
+              <path fillRule="evenodd" d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.25 2.25 0 0 1 18 8.7v4.55a2.25 2.25 0 0 1-2.25 2.25h-.5v.25a2.25 2.25 0 0 1-2.25 2.25h-6a2.25 2.25 0 0 1-2.25-2.25v-.25h-.5A2.25 2.25 0 0 1 2 13.25V8.7a2.25 2.25 0 0 1 1.874-2.245c.374-.056.75-.107 1.126-.153V2.75ZM6.5 2.5v3.324a105.6 105.6 0 0 1 7 0V2.5a.25.25 0 0 0-.25-.25h-6.5a.25.25 0 0 0-.25.25Zm-1 6.49a104.06 104.06 0 0 1 9 0V8.7a.75.75 0 0 0-.626-.74 103.1 103.1 0 0 0-7.748 0A.75.75 0 0 0 5.5 8.7v.29ZM4.5 11a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Zm7 1.5a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 .75-.75Z" clipRule="evenodd" />
+            </svg>
+            Print / Save as PDF
+          </button>
+          <button
+            onClick={handleDownloadJSON}
+            className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 text-gray-500">
+              <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" />
+              <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+            </svg>
+            Download JSON
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -169,7 +240,7 @@ function ShoppingTripCard({ trip, index }: { trip: ShoppingTrip; index: number }
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className={`${color.header} px-4 py-3 flex items-start justify-between gap-2`}>
+      <div className={`${color.header} print-trip-header px-4 py-3 flex items-start justify-between gap-2`}>
         <div>
           <p className="text-white font-bold text-sm">{trip.trip_label}</p>
           <p className="text-white/80 text-xs mt-0.5">
@@ -181,7 +252,7 @@ function ShoppingTripCard({ trip, index }: { trip: ShoppingTrip; index: number }
           target="_blank"
           rel="noopener noreferrer"
           title={`Add to Google Calendar — ${dateLabel}`}
-          className="shrink-0 flex items-center gap-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors px-2.5 py-1.5 text-white text-xs font-semibold"
+          className="no-print shrink-0 flex items-center gap-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors px-2.5 py-1.5 text-white text-xs font-semibold"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-3.5">
             <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm.75-13h-1.5v5.25l4.5 2.7.75-1.23-3.75-2.22V7Z" />
@@ -237,12 +308,15 @@ export default function MealPlanResult({ data, onReset }: MealPlanResultProps) {
             <span className="text-lg font-semibold">kcal</span>
           </p>
         </div>
-        <button
-          onClick={onReset}
-          className="self-start sm:self-center rounded-lg border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
-        >
-          ← Start Over
-        </button>
+        <div className="flex items-center gap-2 no-print">
+          <ExportMenu data={data} />
+          <button
+            onClick={onReset}
+            className="rounded-lg border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+          >
+            ← Start Over
+          </button>
+        </div>
       </div>
 
       <section>
@@ -251,7 +325,7 @@ export default function MealPlanResult({ data, onReset }: MealPlanResultProps) {
 
           {/* Trip 1 — shown before Monday */}
           {trip1 && (
-            <div className="pl-4 border-l-2 border-dashed border-violet-200">
+            <div className="pl-4 border-l-2 border-dashed border-violet-200 print-trip-block">
               <p className="text-xs text-violet-500 font-semibold uppercase tracking-wide mb-2 ml-1">
                 🛒 Shop on Sunday before the week begins
               </p>
@@ -262,7 +336,7 @@ export default function MealPlanResult({ data, onReset }: MealPlanResultProps) {
           {data.meals.map((dayPlan, i) => (
             <div key={i} className="space-y-4">
               {/* Day meals card */}
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm print-day-block">
                 <h3 className="text-base font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100">
                   {dayPlan.day ?? `Day ${i + 1}`}
                 </h3>
@@ -275,7 +349,7 @@ export default function MealPlanResult({ data, onReset }: MealPlanResultProps) {
 
               {/* Trip 2 — shown after Thursday */}
               {dayPlan.day === "Thursday" && trip2 && (
-                <div className="pl-4 border-l-2 border-dashed border-sky-200">
+                <div className="pl-4 border-l-2 border-dashed border-sky-200 print-trip-block">
                   <p className="text-xs text-sky-500 font-semibold uppercase tracking-wide mb-2 ml-1">
                     🛒 Shop on Thursday for the rest of the week
                   </p>

@@ -24,3 +24,77 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media print {
+  /* Hide page chrome and interactive elements */
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset page margins and backgrounds */
+  @page {
+    margin: 1.5cm 1.8cm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  /* Remove decorative shadows and gradients */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background-image: none !important;
+  }
+
+  /* Force print colours for Tailwind bg- classes we actually use */
+  .bg-emerald-50,
+  .bg-amber-50,
+  .bg-sky-50,
+  .bg-violet-500,
+  .bg-sky-500 {
+    background-color: transparent !important;
+  }
+
+  /* Keep borders visible */
+  [class*="border"] {
+    border-color: #d1d5db !important;
+  }
+
+  /* Section headings */
+  h2 {
+    font-size: 13pt;
+    margin-top: 18pt;
+  }
+
+  h3 {
+    font-size: 12pt;
+  }
+
+  /* Trip header colour bar — replace with a simple border */
+  .print-trip-header {
+    background: #f3f4f6 !important;
+    color: black !important;
+    border-bottom: 2px solid #d1d5db;
+  }
+
+  .print-trip-header * {
+    color: black !important;
+  }
+
+  /* Avoid splitting a day card across pages */
+  .print-day-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Avoid splitting a shopping trip across pages */
+  .print-trip-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
